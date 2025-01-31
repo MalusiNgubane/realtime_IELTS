@@ -1,0 +1,24 @@
+/* Custom styles for the app */
+.stApp {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.stButton button {
+    width: 100%;
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.feedback-box {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: #f0f2f6;
+    margin-bottom: 1rem;
+}
+
+.progress-chart {
+    margin-top: 2rem;
+}
