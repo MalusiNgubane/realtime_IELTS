@@ -45,7 +45,7 @@ def main():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if st.button("Enter IELTS", key="enter_button"):
-            st.switch_page("pages/1_🏠_Home.py")  # Redirect to the home page
+            st.switch_page("pages/1_Home.py")  # Redirect to the home page
 
 if __name__ == "__main__":
     main()

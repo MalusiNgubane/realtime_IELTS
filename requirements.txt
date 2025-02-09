@@ -8,3 +8,4 @@ python-dotenv==1.0.1
 audio-recorder-streamlit==0.0.8
 fpdf==1.7.2
 grammarbot==0.2.0
+audio_recorder_streamlit
