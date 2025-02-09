@@ -1,25 +1,26 @@
 import streamlit as st
 
-# Attempt to import LanguageTool. If it fails (for example, due to missing Java),
-# we fall back to a dummy implementation.
+# Attempt to import LanguageTool from language_tool_python.
+# If not available, fall back without raising an error.
 try:
     from language_tool_python import LanguageTool
-except Exception as e:
-    st.error(f"Failed to import language_tool_python: {e}")
+except ImportError:
     LanguageTool = None
+    # Use print so that no Streamlit widget is invoked at module level.
+    print("Warning: language_tool_python module not found. Grammar evaluation will be disabled.")
 
 class IELTSEvaluator:
     def __init__(self):
         """
         Initialize the IELTSEvaluator with the LanguageTool grammar checker.
-        If LanguageTool cannot be initialized (e.g. due to missing Java),
-        fall back to a dummy evaluator.
+        If LanguageTool cannot be initialized (e.g., because it's not installed),
+        fall back by setting self.tool to None.
         """
-        if LanguageTool is not None:
+        if LanguageTool:
             try:
                 self.tool = LanguageTool('en-US')
             except Exception as e:
-                st.error(f"LanguageTool initialization failed: {e}")
+                print(f"Warning: LanguageTool initialization failed: {e}")
                 self.tool = None
         else:
             self.tool = None
@@ -33,15 +34,14 @@ class IELTSEvaluator:
         
         Returns:
             float: Grammar score (1-10). If LanguageTool is unavailable,
-                   a neutral score is returned.
+                   a neutral score (5.0) is returned.
         """
         if self.tool is None:
-            # Fall back to a neutral score if grammar checking is not available.
+            # Return a neutral grammar score if the grammar checker isn't available.
             return 5.0
 
         matches = self.tool.check(text)
         error_count = len(matches)
-        
         if error_count == 0:
             return 10.0
         elif error_count >= 10:
@@ -52,26 +52,13 @@ class IELTSEvaluator:
     def evaluate_vocabulary(self, text):
         """
         Evaluate vocabulary usage and return a score between 1 and 10.
-        
-        Args:
-            text (str): The user's response.
-        
-        Returns:
-            float: Vocabulary score (1-10).
         """
         words = text.split()
         unique_words = set(words)
-        return min(10.0, len(unique_words) / 5)  # Normalize to a score out of 10
+        return min(10.0, len(unique_words) / 5)
 
     def evaluate_fluency(self, text):
         """
-        Evaluate fluency based on response length.
-        
-        Args:
-            text (str): The user's response.
-        
-        Returns:
-            float: Fluency score (1-10).
+        Evaluate fluency based on the number of words and return a score between 1 and 10.
         """
-        # Heuristic: More words suggest higher fluency.
-        return min(10.0, len(text.split()) / 10)  # Normalize to a score out of 10
+        return min(10.0, len(text.split()) / 10)
