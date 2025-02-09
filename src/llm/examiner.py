@@ -74,21 +74,33 @@ Ask a follow-up question to continue the conversation. Keep the question relevan
     def evaluate_response(self, response):
         """
         Generate detailed feedback on the user's response.
-        
+
         Args:
             response (str): The user's response.
-        
+
         Returns:
             str: The generated detailed feedback.
         """
-        prompt = f"""Provide a detailed analysis and feedback on the following response: "{response}".
-Examine and comment thoroughly on grammar, vocabulary, and fluency. 
-Identify specific errors and provide corrected sentences where applicable.
-Discuss the strengths of the response and highlight areas for improvement.
-Offer comprehensive suggestions to enhance overall communication skills."""
+        # Modified prompt with clear instructions and a separation marker.
+        prompt = f"""You are an experienced IELTS examiner.
+Provide a detailed evaluation of the following response:
+"{response}"
+
+Please comment thoroughly on grammar, vocabulary, and fluency.
+Include specific examples of errors, suggested corrections, and actionable advice for improvement.
+
+Detailed Feedback:"""
         try:
-            result = self.model(prompt, max_length=200, num_return_sequences=1)
-            return result[0]['generated_text']
+            # Increase max_length to allow for a more comprehensive response.
+            result = self.model(prompt, max_length=250, num_return_sequences=1)
+            feedback = result[0]['generated_text']
+            # If the output starts with the prompt, trim it off.
+            if feedback.startswith(prompt):
+                feedback = feedback[len(prompt):].strip()
+            # In case the feedback is empty, set a fallback message.
+            if not feedback:
+                feedback = "No detailed feedback was generated. Please try again."
+            return feedback
         except Exception as e:
             st.error(f"Failed to generate feedback: {e}")
             return "Your response was clear, but try to use more advanced vocabulary and improve your fluency."
@@ -126,4 +138,3 @@ Offer comprehensive suggestions to enhance overall communication skills."""
         """
         topic = self.get_cue_card_topic()
         return self.ask_question(topic, mode=mode)
-
