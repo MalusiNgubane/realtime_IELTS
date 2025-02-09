@@ -1,11 +1,28 @@
-from language_tool_python import LanguageTool
+import streamlit as st
+
+# Attempt to import LanguageTool. If it fails (for example, due to missing Java),
+# we fall back to a dummy implementation.
+try:
+    from language_tool_python import LanguageTool
+except Exception as e:
+    st.error(f"Failed to import language_tool_python: {e}")
+    LanguageTool = None
 
 class IELTSEvaluator:
     def __init__(self):
         """
         Initialize the IELTSEvaluator with the LanguageTool grammar checker.
+        If LanguageTool cannot be initialized (e.g. due to missing Java),
+        fall back to a dummy evaluator.
         """
-        self.tool = LanguageTool('en-US')
+        if LanguageTool is not None:
+            try:
+                self.tool = LanguageTool('en-US')
+            except Exception as e:
+                st.error(f"LanguageTool initialization failed: {e}")
+                self.tool = None
+        else:
+            self.tool = None
 
     def evaluate_grammar(self, text):
         """
@@ -15,8 +32,13 @@ class IELTSEvaluator:
             text (str): The user's response.
         
         Returns:
-            float: Grammar score (1-10), with fewer errors yielding a higher score.
+            float: Grammar score (1-10). If LanguageTool is unavailable,
+                   a neutral score is returned.
         """
+        if self.tool is None:
+            # Fall back to a neutral score if grammar checking is not available.
+            return 5.0
+
         matches = self.tool.check(text)
         error_count = len(matches)
         
