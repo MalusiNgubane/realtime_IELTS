@@ -138,8 +138,3 @@ Detailed Feedback:"""
         """
         topic = self.get_cue_card_topic()
         return self.ask_question(topic, mode=mode)
-<<<<<<< HEAD
-
-
-=======
->>>>>>> bdaa281c98517f6955af6f84abee95d602dc63d2

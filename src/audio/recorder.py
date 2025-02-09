@@ -32,10 +32,3 @@ class AudioRecorder:
             del st.session_state[key]
         
         return audio_bytes
-<<<<<<< HEAD
-
-
-
-
-=======
->>>>>>> bdaa281c98517f6955af6f84abee95d602dc63d2
