@@ -1,29 +1,129 @@
+import streamlit as st
 from transformers import pipeline
-from .prompts import EXAMINER_PROMPT, FEEDBACK_PROMPT, FOLLOW_UP_PROMPT  #import both prompts
+import random
+
+@st.cache_resource
+def load_llm():
+    """
+    Load the Language Model (LLM) for generating questions and feedback.
+    
+    Returns:
+        pipeline: A Hugging Face text-generation pipeline.
+    """
+    try:
+        # Use Google's FLAN-T5-small for efficient text generation.
+        return pipeline(
+            "text2text-generation",
+            model="google/flan-t5-small",  # A small, fast model.
+            device="cpu"  # Change to "cuda" if a GPU is available.
+        )
+    except Exception as e:
+        st.error(f"Failed to load LLM: {e}")
+        raise
 
 class IELTSExaminer:
     def __init__(self):
-        # Load a free LLM from Hugging Face (e.g., TinyLlama or FLAN-T5)
-        self.model = pipeline(
-            "text-generation",
-            model="TinyLlama/TinyLlama-1.1B-Chat-v1.0",  # Replace with "google/flan-t5-small" if preferred
-            device="cpu"  # Use "cuda" if you have a GPU
-        )
+        """
+        Initialize the IELTSExaminer by loading the LLM pipeline.
+        """
+        self.model = load_llm()
 
-    def ask_question(self, topic):
-        """Generate an IELTS question based on the topic."""
-        prompt = EXAMINER_PROMPT.format(topic=topic)
-        result = self.model(prompt, max_length=100, num_return_sequences=1)
-        return result[0]['generated_text']
-    
+    def ask_question(self, topic, mode="test"):
+        """
+        Generate an IELTS question based on the given topic and mode.
+        
+        Args:
+            topic (str): The topic for the question.
+            mode (str): "practice" for direct, engaging questions or "test" for standard test questions.
+        
+        Returns:
+            str: The generated question.
+        """
+        if mode == "practice":
+            prompt = f"""You are an IELTS examiner. Ask the candidate a direct question about "{topic}" for a practice session.
+Keep the question concise, direct, and engaging."""
+        else:
+            prompt = f"""You are an IELTS examiner. Ask the candidate a question about "{topic}".
+Keep the question concise and relevant to the IELTS Speaking Test."""
+        try:
+            result = self.model(prompt, max_length=100, num_return_sequences=1)
+            return result[0]['generated_text']
+        except Exception as e:
+            st.error(f"Failed to generate question: {e}")
+            return "Could you tell me more about yourself?"
+
     def ask_follow_up(self, response):
-        """Generate a follow-up question based on the user's response."""
-        prompt = FOLLOW_UP_PROMPT.format(response=response)
-        result = self.model(prompt, max_length=100, num_return_sequences=1)
-        return result[0]['generated_text']
+        """
+        Generate a follow-up question based on the user's response.
+        
+        Args:
+            response (str): The user's response.
+        
+        Returns:
+            str: The generated follow-up question.
+        """
+        prompt = f"""You are an IELTS examiner. The candidate just said: "{response}".
+Ask a follow-up question to continue the conversation. Keep the question relevant and concise."""
+        try:
+            result = self.model(prompt, max_length=100, num_return_sequences=1)
+            return result[0]['generated_text']
+        except Exception as e:
+            st.error(f"Failed to generate follow-up question: {e}")
+            return "Could you elaborate on that?"
 
     def evaluate_response(self, response):
-        """Generate feedback on the user's response."""
-        prompt = FEEDBACK_PROMPT.format(response=response)
-        result = self.model(prompt, max_length=200, num_return_sequences=1)
-        return result[0]['generated_text']
+        """
+        Generate detailed feedback on the user's response.
+        
+        Args:
+            response (str): The user's response.
+        
+        Returns:
+            str: The generated detailed feedback.
+        """
+        prompt = f"""Provide a detailed analysis and feedback on the following response: "{response}".
+Examine and comment thoroughly on grammar, vocabulary, and fluency. 
+Identify specific errors and provide corrected sentences where applicable.
+Discuss the strengths of the response and highlight areas for improvement.
+Offer comprehensive suggestions to enhance overall communication skills."""
+        try:
+            result = self.model(prompt, max_length=200, num_return_sequences=1)
+            return result[0]['generated_text']
+        except Exception as e:
+            st.error(f"Failed to generate feedback: {e}")
+            return "Your response was clear, but try to use more advanced vocabulary and improve your fluency."
+
+    def get_cue_card_topic(self):
+        """
+        Retrieve a random cue card topic from a predefined list.
+        
+        Returns:
+            str: A cue card topic.
+        """
+        CUE_CARD_TOPICS = [
+            "Discuss a person who has significantly impacted your life.",
+            "Describe an achievement you are proud of.",
+            "Describe a successful small business that you know about.",
+            "Talk about a hobby or activity you enjoy.",
+            "Describe a person often in the news and who you would like to meet.",
+            "Discuss a cultural event or festival you have attended.",
+            "Describe a recent travel experience.",
+            "Describe a performance you enjoyed watching.",
+            "Talk about your favourite book or movie.",
+            "Describe a crowded place you’ve been to."
+        ]
+        return random.choice(CUE_CARD_TOPICS)
+    
+    def get_new_question(self, mode="test"):
+        """
+        Generate a new question using a random cue card topic.
+        
+        Args:
+            mode (str): "practice" for direct questions, "test" for standard test questions.
+        
+        Returns:
+            str: The generated IELTS question.
+        """
+        topic = self.get_cue_card_topic()
+        return self.ask_question(topic, mode=mode)
+

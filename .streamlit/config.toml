@@ -1,13 +1,33 @@
 [theme]
+# Main color scheme
 primaryColor = "#F63366"
 backgroundColor = "#FFFFFF"
 secondaryBackgroundColor = "#F0F2F6"
 textColor = "#262730"
 font = "sans serif"
+base = "light"
+
+[client]
+# Enable built-in navigation while hiding other elements
+showSidebarNavigation = true
+toolbarMode = "minimal"
+showErrorDetails = false
 
 [server]
-enableCORS = false
+# Enhanced server security and performance settings
 enableXsrfProtection = true
+enableCORS = true
+maxUploadSize = 200
+enableWebsocketCompression = true
+maxMessageSize = 200
 
 [browser]
+# Browser tab settings
 gatherUsageStats = false
+serverAddress = "localhost"
+serverPort = 8501
+
+[logger]
+# Logging configuration
+level = "info"
+messageFormat = "%(asctime)s %(message)s"
